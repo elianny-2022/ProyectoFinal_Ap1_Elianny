@@ -1,0 +1,151 @@
+@page "/Ganancias"
+@attribute [Authorize]
+@inject GananciasBLL gananciasBLL
+<EditForm Model="this">
+    <div className="Container" class="card border-secondary mb-3" style="Margin: 15px;">
+        <div class="container-sm row-cols-md-1">
+            <div class="card shadow-lg">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card text-center">
+                        <h1>Consulta de Ganancias</h1>
+                    </div>
+                    </div>
+           <div class="card-body">
+        <form>
+            <div class="input-group d-flex align-items-end">
+
+                @* Filtro *@
+                <div class="input-group" style="margin-right: 3px; width: 15rem;">
+                    <span class="input-group-text">Filtro</span>
+                    <InputSelect class="form-select text-14 col" @bind-Value="Filtro">
+                    <option value="0" hidden selected>Seleccione</option>
+                        <option value="1" >ID</option>
+                        @* <option value="2">Fecha</option>
+                        <option value="3">Monto</option> *@
+                    </InputSelect>
+                </div>
+                 @* TextBox Busqueda *@
+                <div class="input-group" style=" margin-right: 3px;  width: 13rem;">
+                        <span class="input-group-text">Busquedad</span>
+                        <InputText class="form-control" @bind-Value="Criterio" />
+                        <option value="0" hidden selected>Busca por ID</option>
+                    </div>
+                    
+                @* Fecha Desde *@
+                <div class="input-group" style=" margin-right: 3px; width: 13rem;">
+                    <span class="input-group-text">Desde</span>
+                    <InputDate @bind-Value="FechaDesde" class="form-control col" />
+                </div>
+
+                @* Fecha Hasta*@
+                <div class="input-group" style=" width: 13rem;">
+                    <span class="input-group-text">Hasta</span>
+                    <InputDate @bind-Value="FechaHasta" class="form-control col" />
+                </div>
+                
+                @* Boton Buscar *@
+                <button type="button" style="z-index:0;" class="btn btn-outline-primary" @onclick="Buscar">
+                    <i class="oi oi-magnifying-glass mr-2" /> 
+                </button>
+            </div>
+        </form>
+    </div>
+                <table class="table table-striped border-secondary mt-4" style="cursor: pointer;">
+
+                    <thead class="thead">
+                        <tr class="table">
+                            <th>GananciaId</th>
+                            <th>Fecha</th>
+                             <th>Monto</th>
+                            <th>Ganancia</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @if (ganancias == null || ganancias.Count == 0)
+                        {
+                            <span
+                            style="color:#000; text-shadow: 1.5px 2px rgba(0, 0, 0, 0.4); margin: 
+                            20px; text-align:center"
+                            >En filtro debe seleccionar ID y en busqueda poner el numero de ID y darle al boton buscar</span>
+                        }
+                        else
+                        {
+
+                            @foreach (var ganancia in ganancias)
+                            {
+                                <tr>
+                                    <td>@ganancia.GananciaId</td>
+                                    <td>@ganancia.Fecha.ToString("dd/MM/yyyy")</td>
+                                    <td>@ganancia.Monto</td>
+                                    <td>@ganancia.Ganancia</td>
+                                    <td><a class="btn btn-sm btn-outline-primary oi oi-eye"
+                                    href="Ganancia/@ganancia.GananciaId">Ver</a> </td>
+                                </tr>
+                            }
+                        }
+
+                    </tbody>
+                </table>
+                @* <button  class=" btn btn-outline-primary">
+                    <i class="oi oi-document" /> Imprimir</button> *@
+            </div>
+        </div>
+    </div>
+    </div>
+</EditForm>
+
+@code {
+    public List<Ganancias> ganancias { get; set; } = new List<Ganancias>();
+    private DateTime FechaDesde { get; set; } = new DateTime(1990, 12, 31);
+    private DateTime FechaHasta { get; set; } = DateTime.Today.AddDays(1);
+    public string? Filtro { get; set; }
+    public string? Criterio { get; set; }
+ 
+    protected override void OnInitialized()
+    {
+        ganancias = gananciasBLL.GetList(m => true);
+    }
+    public void Buscar()
+    {
+        ganancias = new List<Ganancias>();
+        if(FechaHasta != null)
+        FechaHasta = FechaHasta.AddHours(23).AddMinutes(59).AddSeconds(59);
+
+        if (Criterio != null)
+        {
+            switch (Filtro)
+            {
+                case "1": //Id
+                    {
+                        int ID = Utilities.ToInt(Criterio);
+                        if (ID == -1)
+                            ganancias= gananciasBLL.GetList(m => m.Fecha >= FechaDesde && m.Fecha <= FechaHasta);
+                        else
+                            ganancias = gananciasBLL.GetList(m => m.GananciaId == ID && m.Fecha >= FechaDesde && m.Fecha<=
+                            FechaHasta);
+                        break;
+                    }
+                
+                   case "2": //Monto
+                    {
+                        decimal Monto = Utilities.ToDecimal(Criterio);
+                        if (Monto == -1)
+                            ganancias= gananciasBLL.GetList(m => m.Fecha >= FechaDesde && m.Fecha <= FechaHasta);
+                        else
+                            ganancias = gananciasBLL.GetList(m => m.Monto == Monto && m.Fecha >= FechaDesde && m.Fecha <= FechaHasta);
+                        break;
+                    }
+               
+               }   
+               }
+            else
+            {
+                
+            ganancias = gananciasBLL.GetList(m => m.Fecha >= FechaDesde && m.Fecha <= FechaHasta);
+        }
+
+    }
+}
